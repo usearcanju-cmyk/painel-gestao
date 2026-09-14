@@ -9,9 +9,6 @@
     "api/snapshot.js": {
       "maxDuration": 60
     },
-    "api/nuvemshop-webhook.js": {
-      "maxDuration": 60
-    },
     "api/live.js": {
       "maxDuration": 60
     },

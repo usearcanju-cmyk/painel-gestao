@@ -1,4 +1,4 @@
-# Use Arcanju Financeiro V4
+# Use Arcanju Financeiro V5
 
 Leia primeiro LEIA-PRIMEIRO.md. Mantém app financeiro V2/V3 e autenticação; adiciona pedidos centrais, webhook Nuvemshop, fila persistente, retomada e painel automático.
 
@@ -52,3 +52,7 @@ https://github.com/neondatabase/serverless
 https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package
 https://vercel.com/docs/cron-jobs/usage-and-pricing
 https://vercel.com/docs/plans/hobby
+
+
+## V5 — Aplicativo sob medida Nuvemshop
+Use a chave criada no administrador da sua própria loja. Configure apenas no Vercel: `NUVEMSHOP_STORE_ID`, `NUVEMSHOP_TOKEN` e `NUVEMSHOP_USER_AGENT`. O painel consulta a loja automaticamente enquanto está aberto; não é necessário cadastrar webhooks.

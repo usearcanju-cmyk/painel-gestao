@@ -1,4 +1,4 @@
-# Atualização V4 — vendas pagas automáticas
+# Atualização V5 — vendas pagas automáticas
 
 ## Agora: atualizar o GitHub
 1. Faça backup JSON dos dados pelo app atual.
@@ -29,3 +29,7 @@ As contas reais ainda não estão conectadas. Nenhum deploy, webhook remoto ou b
 Falhas de fornecedor/banco ficam pendentes. Com painel fechado e sem novos eventos, a próxima retomada automática pode ser a conferência diária. Para recuperação frequente independente de eventos/abas, configurar cron mais frequente em plano compatível ou fila gerenciada. Não se deve anunciar SLA instantâneo.
 
 O endpoint do painel lê no máximo10mil registros/3,5MB por consulta. Ao exceder, bloqueia a consulta e exige evolução para paginação, sem truncar silenciosamente. A conferência diária cobre alterações desde a última conferência completa com sobreposição de1h; a primeira cobre3dias. Não substitui importação histórica de meses antigos.
+
+
+### Chave Nuvemshop
+Esta versão usa o token de **Aplicativos sob medida** da própria loja. Nunca coloque esse token no GitHub, no HTML ou em mensagens; use somente nas Variáveis de Ambiente da Vercel.
