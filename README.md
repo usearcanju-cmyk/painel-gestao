@@ -1,42 +1,54 @@
-# Use Arcanju — Financeiro com login (V3)
+# Use Arcanju Financeiro V4
 
-App V2 preservado, com entrada protegida e funções adaptadas para Vercel. Sem dependências npm. Node 22.
+Leia primeiro LEIA-PRIMEIRO.md. Mantém app financeiro V2/V3 e autenticação; adiciona pedidos centrais, webhook Nuvemshop, fila persistente, retomada e painel automático.
 
-## Subir no GitHub e Vercel
-1. Extraia o ZIP e envie o CONTEÚDO da pasta para a raiz do repositório (api, lib, private, public, scripts, tests, package.json, vercel.json, .gitignore, .env.example, README). Não envie o arquivo de configuração privada, .env.local, backups financeiros nem o ZIP do Claude. Repositório privado é indicado para preservar regras comerciais.
-2. Na Vercel: Add New > Project > importe seu repositório. Framework: Other. Root: pasta contendo package.json. Sem build command; Output Directory: public (já configurado). Node22.
-3. Configure APP_PASSWORD_HASH e SESSION_SECRET a partir do arquivo privado separado. Não prefixe com NEXT_PUBLIC, PUBLIC ou VITE.
-4. Adicione Upstash Redis via Marketplace/Storage e obtenha UPSTASH_REDIS_REST_URL e UPSTASH_REDIS_REST_TOKEN. São usados para limite persistente de10 logins por IP em15min. Em produção, se faltarem ou o serviço falhar, login permanece fechado. Há serviços/planos externos: confira condições vigentes no painel antes de contratar.
-5. Deploy/redeploy. Abra a URL e digite a senha escolhida. Cada recarregamento/nova abertura pede senha. Sair e15min sem interação bloqueiam a interface; token em memória expira no servidor em8h. Sem persistência de token/cookie/lembrar-me.
-6. Antes de usar dados reais: confirme que `/api/app` sem credencial devolve401, `/private/app.html` não está acessível e `/api/snapshot` sem credencial devolve401. Não publique arquivos private como estáticos nem mude outputDirectory para a raiz.
+## Publicação
+Node22, npm install, Framework Other, Output Directory public. package-lock.json incluído. api/ são funções; private/ e db/ entram nos bundles indicados em vercel.json e NUNCA devem ser servidos como estáticos. Não mude Output Directory para raiz.
+Vercel suporta processamento pós-resposta via @vercel/functions waitUntil; o trabalho está sujeito ao limite de execução da função. Antes da resposta202, a fila já está no Postgres. Se morrer depois, a mensagem permanece pendente para retomada.
 
-A publicação na Vercel NÃO foi executada aqui. Os testes locais não substituem essas verificações de roteamento do deploy.
+## Variáveis de ambiente
+Preserve APP_PASSWORD_HASH e SESSION_SECRET já configurados. Upstash continua OPCIONAL para limite distribuído de login; sem ele há apenas limite por instância em memória, que não equivale a proteção distribuída.
 
-## Primeiro uso
-Metas do mês > configure receita e lucro. Agenda > escolha os dias dos custos fixos; nenhum vencimento foi inventado. Configuração > revise premissas. Faça backup da versão HTML anterior e restaure neste app: mudar de domínio não transfere localStorage automaticamente.
+Novas para Nuvemshop automática:
+- DATABASE_URL: conexão Neon Postgres, privada. Não colocar NEXT_PUBLIC ou semelhante.
+- NUVEMSHOP_STORE_ID: ID numérico da loja autorizada.
+- NUVEMSHOP_TOKEN: access token do app autorizado, escopo read_orders.
+- NUVEMSHOP_USER_AGENT: identificação do app e contato do responsável.
+- NUVEMSHOP_API_VERSION: 2025-03 na base desta entrega, editável conforme compatibilidade vigente.
+- NUVEMSHOP_APP_SECRET: client/app secret correspondente ao app que criou os webhooks. Não é o token de acesso nem a senha do painel.
+- SHIRT_PRODUCT_FACTORS: JSON de product_id para quantidade de camisetas por unidade. Exemplo fictício {"123":1,"456":2}. Brindes ficam fora do mapa. ALL_PRODUCTS_ARE_SHIRTS=true só se TODOS os itens vendidos forem camisetas unitárias.
+- APP_URL: URL HTTPS da produção, por exemplo https://painel-gestao-tau.vercel.app.
+- CRON_SECRET: segredo aleatório de pelo menos32 caracteres, exclusivo do agendamento. Gere localmente com `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` e coloque somente na Vercel.
 
-**Dados de gestão continuam armazenados no navegador deste dispositivo.** Vercel não sincroniza automaticamente metas/lançamentos entre PC e celular. Exporte backups. Não existe banco financeiro central nem cron ativo nesta entrega. Upstash é só o limitador de login. O histórico de vendas ainda não foi fornecido em formato legível e não foi fabricado.
+Depois de cadastrar: redeploy. No painel, Conexões & histórico > Vendas automáticas:
+1. Preparar banco (cria tabelas, não apaga existentes).
+2. Ativar avisos da loja (cria webhooks faltantes, não duplica os mesmos eventos/URL).
 
-## Nuvemshop + Meta (servidor preparado, contas ainda não autorizadas)
-Cadastre variáveis de `.env.example` exclusivamente no servidor e redeploy. Acesso só de leitura. Senhas e tokens não devem ser enviados pelo chat.
-- Nuvemshop: app autorizado para leitura de pedidos, storeID, token e User-Agent de contato válido. API_VERSION editável; conferir compatibilidade da conta e documentação atual.
-- SHIRT_PRODUCT_FACTORS: JSON com productID e camisetas por unidade. Exemplo fictício `{"123":1,"456":2}`. Brindes ausentes do mapa não contam. Use ALL_PRODUCTS_ARE_SHIRTS=true somente se realmente TODOS os itens forem camisetas unitárias.
-- Meta: conta de anúncios em BRL e America/Sao_Paulo, token autorizado para ler Insights/ads_read e versão Graph habilitada no app.
-- Clique “Sincronizar mês” no canto inferior. Consulta o mês selecionado, pagina, junta gasto da conta sem somar receita atribuída da Meta e importa por ID. Se uma fonte falha, não aplica importação parcial. Consultas grandes podem ultrapassar60s/3,5MB: use CSV; não declare histórico completo se falhar. Importação inicial é mês a mês, não um cron de todo histórico.
-- Reembolsos/status desconhecidos bloqueiam confirmação; custos não disponíveis permanecem estimativas até revisão. Pedidos são selecionados por criação; a competência usa pagamento quando disponível. Uma mudança em pedido criado em mês antigo exige sincronizar esse mês de criação. Não há webhook incremental nesta entrega.
-- Fretes pagos e Appmax reais ainda não conectados. Fornecedor de etiquetas precisa ser confirmado. Use CSV, sem confundir frete cobrado com custo de etiqueta.
-- A antiga área “servidor externo” e downloads de servidor V2 permanece como alternativa avançada. Para ESTE deploy use o botão “Sincronizar mês”, não é necessário rodar o servidor V2 permanente.
-- Não existe OAuth interativo pronto nem cron permanente: configurar tokens legítimos é etapa de ativação. A senha do app não concede acesso a nenhum provedor.
+O destino é APP_URL + /api/nuvemshop-webhook. Eventos: order/paid, order/updated, order/cancelled, order/edited, order/pending, order/voided. Não abra essa URL no navegador para testar: ela só aceita POST autenticado por assinatura da Nuvemshop.
+Alternativas via terminal: npm run db:setup e npm run webhooks:register, com .env.local privado. Tokens de provedores ficam exclusivamente no servidor. O código não implementa tela OAuth: obter a autorização da aplicação é uma etapa anterior.
 
-## Segurança e dados
-HTML completo servido apenas por função autenticada; public contém somente login. Autenticação scrypt com salt + HMAC em sessão temporária. Senha/segredos não incluídos neste repositório. Login servidor limita tentativas em Redis; modo local usa memória. Header no-store e bloqueio de iframe. Qualquer acesso físico ao perfil do navegador ainda pode ler seus dados locais; login não criptografa localStorage. Não use em navegador compartilhado sem perfil pessoal. Para invalidar todos os tokens, troque SESSION_SECRET e redeploy.
+## Agendamento e plano
+vercel.json inclui cron diário às09UTC. Configure CRON_SECRET para a Vercel autenticar chamadas. Planos Hobby limitam frequência diária; Vercel também restringe Hobby a uso pessoal não comercial. Para operação comercial, verificar plano compatível. Pode aumentar frequência em plano que a permita, preservando autenticação. Conferência diária não depende de navegador aberto.
+A conferência usa updated_at_min/max e só avança o marco após enfileirar o intervalo completo. Interrupção, volume >10mil ou timeout preservam marco anterior e last_error; o intervalo precisa ser reduzido/evoluído nesses casos. Fila não descarta erros automaticamente.
 
-## Desenvolvimento e testes
-`npm run password` gera hash e chave a partir de senha digitada de forma oculta. Coloque as saídas em `.env.local` (ignorado pelo git). `npm run dev` abre http://localhost:3000. `npm test` executa verificações de credencial/token. Nunca configure dev na rede pública.
-Testes locais adicionais desta entrega: requisições HTTP reais de login com a senha escolhida, proteção de rotas e arquivos privados, compilação do JavaScript. O financeiro preserva a referência previamente testada. O teste visual/login pelo navegador não pôde ser executado porque o Chromium não está instalado neste ambiente. APIs reais/Vercel/Upstash reais dependem de credenciais e não foram validadas ponta a ponta.
+## Dados e finanças
+arcanju_orders guarda id de loja/pedido, data/valores/status/quantidade e localidade, sem nome/CPF/telefone/endereço completo ou tokens do pedido. arcanju_jobs guarda o trabalho pendente. Dados são consultados somente após login. Política de retenção/exclusão e permissões do banco deve ser definida antes de produção ampla.
+Postgres é fonte dos pedidos automáticos. localStorage continua fonte de metas, custos, caixa e lançamentos manuais. Restaurar backup antigo não apaga pedidos do servidor. Evite lançar manualmente os mesmos pedidos: meses conflitantes aguardam conciliação.
+Custo de camiseta15, oferta2por249,90, experiência9,15, frete18 e demais premissas mantidos. Custos ausentes são estimados, incluindo marketing no dia sem relatório. Mídia real substitui a estimativa quando importada. Lucro atual não é lucro líquido final comprovado sem conciliação de taxas/frete/falhas.
+A aprovação de pagamento não marca a entrega como concluída. Escala continua dependendo de margem, caixa, capacidade e confirmação operacional.
 
-## Referências
-- https://vercel.com/docs/functions/runtimes/node-js
-- https://vercel.com/docs/project-configuration
-- https://vercel.com/docs/storage
-- https://upstash.com/docs/redis/features/restapi
+## Testes
+- npm test: credenciais, token, assinatura, corpo alterado, loja errada, status, brindes, frete, timezone e confirmação somente após gravação.
+- npm run test:queue: PGlite (Postgres em WASM) executa SQL real de schema/fila. Testa repetição, cancelamento, resposta antiga, novo evento durante processamento e retenção de falha. Não é teste contra seu Neon remoto.
+- npm run test:finance: VM com DOM simulado,14 telas, regressão financeira, nova venda, cancelamento, marketing estimado e atualização por consulta sem clique.
+- Não foi executado teste visual em navegador real nem integração ponta a ponta com suas contas/Vercel/Neon.
+
+Antes de ativar em produção: confirmar `/api/app`, `/api/live` e `/api/setup` sem login retornam401 e `/private/app.html` retorna404. Enviar webhook inválido deve retornar401 e não criar pedido. Conferir um pedido pago real, repetir aviso e comparar valores/quantidades com Nuvemshop. Conferir cancelamento. A visualização do app deve atualizar após processamento e próxima consulta.
+
+## Fontes oficiais consultadas
+https://tiendanube.github.io/api-documentation/resources/webhook
+https://tiendanube.github.io/api-documentation/resources/order
+https://github.com/neondatabase/serverless
+https://vercel.com/docs/functions/functions-api-reference/vercel-functions-package
+https://vercel.com/docs/cron-jobs/usage-and-pricing
+https://vercel.com/docs/plans/hobby

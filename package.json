@@ -1,1 +1,25 @@
-{"name":"use-arcanju-financeiro","private":true,"version":"3.0.0","type":"module","engines":{"node":"22.x"},"scripts":{"dev":"node scripts/dev.mjs","test":"node --test tests/*.test.mjs","password":"node scripts/password.mjs"}}
+{
+  "name": "use-arcanju-financeiro",
+  "private": true,
+  "version": "4.0.0",
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "password": "node scripts/password.mjs",
+    "db:setup": "node scripts/setup-db.mjs",
+    "webhooks:register": "node scripts/register-webhooks.mjs",
+    "test:queue": "node tests/queue.integration.mjs",
+    "test:finance": "node tests/finance.cjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "1.1.0",
+    "@vercel/functions": "3.9.7"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.8"
+  }
+}

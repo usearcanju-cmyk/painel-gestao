@@ -1,1 +1,55 @@
-{"version":2,"framework":null,"outputDirectory":"public","functions":{"api/app.js":{"includeFiles":"private/**"},"api/snapshot.js":{"maxDuration":60}},"headers":[{"source":"/(.*)","headers":[{"key":"Cache-Control","value":"no-store"},{"key":"X-Content-Type-Options","value":"nosniff"},{"key":"Referrer-Policy","value":"no-referrer"},{"key":"X-Frame-Options","value":"DENY"}]}]}
+{
+  "version": 2,
+  "framework": null,
+  "outputDirectory": "public",
+  "functions": {
+    "api/app.js": {
+      "includeFiles": "private/**"
+    },
+    "api/snapshot.js": {
+      "maxDuration": 60
+    },
+    "api/nuvemshop-webhook.js": {
+      "maxDuration": 60
+    },
+    "api/live.js": {
+      "maxDuration": 60
+    },
+    "api/cron.js": {
+      "maxDuration": 60
+    },
+    "api/setup.js": {
+      "maxDuration": 60,
+      "includeFiles": "db/**"
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        }
+      ]
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 9 * * *"
+    }
+  ]
+}
