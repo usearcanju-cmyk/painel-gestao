@@ -1,0 +1,4 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {scryptSync} from 'node:crypto';import {checkPassword,issue,valid} from '../lib/auth.js';
+process.env.SESSION_SECRET='test-only-0123456789abcdefghij0123456789';
+test('senha correta, incorreta e hash inválido',()=>{let salt='a'.repeat(32),hash='scrypt:'+salt+':'+scryptSync('only-test',salt,64).toString('hex');assert.ok(checkPassword('only-test',hash));assert.equal(checkPassword('wrong',hash),false);assert.equal(checkPassword('x','invalid'),false)});
+test('token válido, adulterado, expirado, troca de chave',()=>{let t=issue();assert.ok(valid(t));assert.equal(valid(t+'x'),false);assert.equal(valid(t,Date.now()+9*3600000),false);process.env.SESSION_SECRET='other-key-0123456789abcdefghij0123456789';assert.equal(valid(t),false)});

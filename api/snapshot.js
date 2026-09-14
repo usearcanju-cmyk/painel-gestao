@@ -1,0 +1,7 @@
+import {secure} from '../lib/auth.js';
+import {collect} from '../lib/collect.js';
+export default async function handler(req,res){if(!secure(req,res))return;res.setHeader('Content-Type','application/json');if(req.method!=='GET'){res.statusCode=405;return res.end('{}')}
+ const m=new URL(req.url,'https://internal').searchParams.get('month');if(!/^20\d\d-(0[1-9]|1[0-2])$/.test(m||'')){res.statusCode=400;return res.end(JSON.stringify({error:'Competência inválida'}))}
+ const now=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());if(m>now.slice(0,7)){res.statusCode=400;return res.end(JSON.stringify({error:'Selecione mês atual ou passado'}))}
+ const missing=['NUVEMSHOP_STORE_ID','NUVEMSHOP_TOKEN','NUVEMSHOP_USER_AGENT','META_TOKEN','META_ACCOUNT_ID','META_GRAPH_VERSION'].filter(k=>!process.env[k]);if(missing.length){res.statusCode=503;return res.end(JSON.stringify({error:'Integração ainda não configurada: '+missing.join(', ')}))}
+ try{let last=new Date(Date.UTC(+m.slice(0,4),+m.slice(5,7),0)).toISOString().slice(0,10),data=await collect(m+'-01',last<now?last:now);let raw=JSON.stringify(data);if(Buffer.byteLength(raw)>3500000)throw Error('Volume acima do limite. Importar por CSV ou implementar paginação menor.');res.end(raw)}catch(e){res.statusCode=502;res.end(JSON.stringify({error:e.message?.replace(/https?:\/\/\S+/g,'[fonte]')||'Falha ao consultar fontes'}))}}

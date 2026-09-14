@@ -1,0 +1,4 @@
+import {checkPassword,issue} from '../lib/auth.js';
+import {allowLogin} from '../lib/rate.js';
+export default async function handler(req,res){res.setHeader('Cache-Control','no-store');res.setHeader('Content-Type','application/json');if(req.method!=='POST'){res.statusCode=405;return res.end('{}')}
+ try{if(!process.env.APP_PASSWORD_HASH||!process.env.SESSION_SECRET)throw Error('Configuração pendente');if(!await allowLogin(req)){res.statusCode=429;return res.end(JSON.stringify({error:'Muitas tentativas. Aguarde 15 minutos.'}))}let body=req.body;if(typeof body==='string')body=JSON.parse(body);if(!checkPassword(body?.password)){res.statusCode=401;return res.end(JSON.stringify({error:'Senha incorreta.'}))}res.end(JSON.stringify({token:issue()}))}catch{res.statusCode=503;res.end(JSON.stringify({error:'Login indisponível. Verifique as variáveis de ambiente e o Upstash.'}))}}
